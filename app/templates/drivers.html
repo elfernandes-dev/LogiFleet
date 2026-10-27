@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão de Motoristas - LogiFleet{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+  <div>
+    <h2 class="h3 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+      <i class="bi bi-people-fill text-primary"></i> Gestão de Motoristas
+    </h2>
+    <p class="text-secondary small mb-0">Cadastre e gerencie a equipe de condutores responsáveis pelas rotas e entregas.</p>
+  </div>
+  <div>
+    <button type="button" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm" id="btnNewDriver" data-bs-toggle="modal" data-bs-target="#driverModal">
+      <i class="bi bi-person-plus-fill"></i>
+      <span>Novo Motorista</span>
+    </button>
+  </div>
+</div>
+
+<!-- Filtro de Busca -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-3">
+    <form method="GET" action="{{ url_for('main.drivers_view') }}" class="row g-2 align-items-center">
+      <div class="col-12 col-md-9">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="search" class="form-control border-start-0" placeholder="Buscar motorista por nome ou dígitos do CPF..." value="{{ search }}">
+        </div>
+      </div>
+      <div class="col-6 col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-secondary w-100">
+          <i class="bi bi-funnel me-1"></i> Filtrar
+        </button>
+        {% if search %}
+        <a href="{{ url_for('main.drivers_view') }}" class="btn btn-outline-secondary" title="Limpar busca">
+          <i class="bi bi-x-lg"></i>
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Tabela de Motoristas -->
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4" style="width: 80px;">#ID</th>
+            <th>Nome do Motorista</th>
+            <th>CPF (Identificação)</th>
+            <th class="text-center">Total de Serviços</th>
+            <th>Data de Cadastro</th>
+            <th class="text-end pe-4" style="width: 150px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if drivers %}
+            {% for driver in drivers %}
+            <tr>
+              <td class="ps-4 fw-semibold text-secondary">#{{ driver.id }}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="rounded-circle bg-primary-subtle text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    {{ driver.name[:1].upper() }}
+                  </div>
+                  <div>
+                    <div class="fw-bold text-dark">{{ driver.name }}</div>
+                    <div class="small text-muted">Condutor Habilitado</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <code class="text-dark bg-light px-2 py-1 rounded border">{{ driver.formatted_tax_id() }}</code>
+              </td>
+              <td class="text-center">
+                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-1">
+                  {{ driver.schedules.count() }} agendamento(s)
+                </span>
+              </td>
+              <td class="text-secondary small">
+                {{ driver.created_at.strftime('%d/%m/%Y %H:%M') if driver.created_at else '-' }}
+              </td>
+              <td class="text-end pe-4">
+                <div class="btn-group btn-group-sm">
+                  <button type="button" class="btn btn-outline-primary btn-edit-driver" data-id="{{ driver.id }}" title="Editar motorista">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button type="button" class="btn btn-outline-danger btn-delete-driver" data-id="{{ driver.id }}" data-name="{{ driver.name }}" title="Excluir motorista">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6" class="text-center py-5 text-muted">
+                <i class="bi bi-person-x fs-1 d-block mb-2 text-secondary"></i>
+                <h5 class="fw-bold">Nenhum motorista encontrado</h5>
+                <p class="small mb-3">Cadastre um novo condutor ou limpe os filtros de pesquisa.</p>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#driverModal">
+                  <i class="bi bi-person-plus me-1"></i> Cadastrar Primeiro Motorista
+                </button>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Cadastro / Edição de Motorista -->
+<div class="modal fade" id="driverModal" tabindex="-1" aria-labelledby="driverModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold" id="driverModalTitle">Cadastrar Novo Motorista</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <form id="driverForm" autocomplete="off">
+        <div class="modal-body p-4">
+          <input type="hidden" id="driverId" value="">
+
+          <div class="mb-3">
+            <label for="driverName" class="form-label fw-semibold">Nome Completo <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="driverName" placeholder="Ex: Carlos Eduardo Silva" required minlength="3" maxlength="100">
+            <div class="form-text">Mínimo de 3 caracteres.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="driverTaxId" class="form-label fw-semibold">CPF do Motorista <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+              <input type="text" class="form-control mask-cpf" id="driverTaxId" placeholder="000.000.000-00" required maxlength="14">
+            </div>
+            <div class="form-text">O sistema aplica máscara automática e validação algorítmica de dígitos verificadores.</div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="driverSaveBtn">
+            <i class="bi bi-check-lg me-1"></i> Salvar Motorista
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

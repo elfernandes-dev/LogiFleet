@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão de Veículos da Frota - LogiFleet{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+  <div>
+    <h2 class="h3 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+      <i class="bi bi-truck text-primary"></i> Gestão de Veículos da Frota
+    </h2>
+    <p class="text-secondary small mb-0">Cadastre e monitore os veículos disponíveis para alocação de cargas e itinerários.</p>
+  </div>
+  <div>
+    <button type="button" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm" id="btnNewVehicle" data-bs-toggle="modal" data-bs-target="#vehicleModal">
+      <i class="bi bi-plus-lg"></i>
+      <span>Novo Veículo</span>
+    </button>
+  </div>
+</div>
+
+<!-- Filtro de Busca -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-3">
+    <form method="GET" action="{{ url_for('main.vehicles_view') }}" class="row g-2 align-items-center">
+      <div class="col-12 col-md-9">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="search" class="form-control border-start-0" placeholder="Buscar veículo por modelo, cor ou placa..." value="{{ search }}">
+        </div>
+      </div>
+      <div class="col-6 col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-secondary w-100">
+          <i class="bi bi-funnel me-1"></i> Filtrar
+        </button>
+        {% if search %}
+        <a href="{{ url_for('main.vehicles_view') }}" class="btn btn-outline-secondary" title="Limpar busca">
+          <i class="bi bi-x-lg"></i>
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Tabela de Veículos -->
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4" style="width: 80px;">#ID</th>
+            <th>Modelo do Veículo</th>
+            <th>Cor Predominante</th>
+            <th>Placa (Identificação)</th>
+            <th class="text-center">Status Operacional</th>
+            <th class="text-center">Histórico de Ordens</th>
+            <th class="text-end pe-4" style="width: 150px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if vehicles %}
+            {% for vehicle in vehicles %}
+            <tr>
+              <td class="ps-4 fw-semibold text-secondary">#{{ vehicle.id }}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="rounded-3 bg-light border p-2 text-dark d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                    <i class="bi bi-truck fs-5 text-primary"></i>
+                  </div>
+                  <div>
+                    <div class="fw-bold text-dark">{{ vehicle.model }}</div>
+                    <div class="small text-muted">Frota Logística</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark border px-2 py-1">
+                  <i class="bi bi-palette me-1 text-secondary"></i> {{ vehicle.color }}
+                </span>
+              </td>
+              <td>
+                <div class="license-plate-tag">
+                  <span class="text-primary small fw-bold" style="font-size: 0.65rem;">BRASIL</span>
+                  <span>{{ vehicle.formatted_license_plate() }}</span>
+                </div>
+              </td>
+              <td class="text-center">
+                {% if vehicle.is_active %}
+                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-3 py-1">
+                  <i class="bi bi-check-circle-fill me-1"></i> Ativo
+                </span>
+                {% else %}
+                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-3 py-1">
+                  <i class="bi bi-x-circle-fill me-1"></i> Inativo
+                </span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-1">
+                  {{ vehicle.schedules.count() }} ordem(ns)
+                </span>
+              </td>
+              <td class="text-end pe-4">
+                <div class="btn-group btn-group-sm">
+                  <button type="button" class="btn btn-outline-primary btn-edit-vehicle" data-id="{{ vehicle.id }}" title="Editar veículo">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button type="button" class="btn btn-outline-danger btn-delete-vehicle" data-id="{{ vehicle.id }}" data-model="{{ vehicle.model }}" data-plate="{{ vehicle.formatted_license_plate() }}" title="Excluir veículo">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-truck-flatbed fs-1 d-block mb-2 text-secondary"></i>
+                <h5 class="fw-bold">Nenhum veículo encontrado</h5>
+                <p class="small mb-3">Cadastre um novo veículo para começar a agendar serviços.</p>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#vehicleModal">
+                  <i class="bi bi-plus-lg me-1"></i> Cadastrar Primeiro Veículo
+                </button>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Cadastro / Edição de Veículo -->
+<div class="modal fade" id="vehicleModal" tabindex="-1" aria-labelledby="vehicleModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold" id="vehicleModalTitle">Cadastrar Novo Veículo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <form id="vehicleForm" autocomplete="off">
+        <div class="modal-body p-4">
+          <input type="hidden" id="vehicleId" value="">
+
+          <div class="mb-3">
+            <label for="vehicleModel" class="form-label fw-semibold">Modelo do Veículo <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="vehicleModel" placeholder="Ex: Mercedes-Benz Sprinter 416" required maxlength="50">
+          </div>
+
+          <div class="mb-3">
+            <label for="vehicleColor" class="form-label fw-semibold">Cor Predominante <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="vehicleColor" placeholder="Ex: Branco, Prata, Azul" required maxlength="30">
+          </div>
+
+          <div class="mb-3">
+            <label for="vehiclePlate" class="form-label fw-semibold">Placa (Mercosul ou Tradicional) <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-card-heading"></i></span>
+              <input type="text" class="form-control mask-plate" id="vehiclePlate" placeholder="Ex: BRA2E19 ou ABC-1234" required maxlength="10">
+            </div>
+            <div class="form-text">Aceita os padrões Mercosul (ABC1D23) e Tradicional Brasileiro (ABC-1234).</div>
+          </div>
+
+          <div class="form-check form-switch mt-3">
+            <input class="form-check-input" type="checkbox" role="switch" id="vehicleIsActive" checked>
+            <label class="form-check-label fw-semibold" for="vehicleIsActive">Veículo Ativo na Operação</label>
+            <div class="form-text">Veículos inativos não podem ser selecionados para novos agendamentos no calendário.</div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="vehicleSaveBtn">
+            <i class="bi bi-check-lg me-1"></i> Salvar Veículo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,6 @@
+{
+  "name": "Fleet Logistics & Scheduling System",
+  "description": "Sistema completo de Gestão de Logística e Agendamento de Frotas com controle de motoristas, veículos e calendário interativo de ordens de serviço.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

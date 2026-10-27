@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Sistema de Gestão de Frotas & Logística{% endblock %}</title>
+
+  <!-- Bootstrap 5 CSS via CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+  <!-- Bootstrap Icons via CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Barra de Navegação Superior -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-lg-4">
+      <a class="navbar-brand text-white" href="{{ url_for('main.calendar_view') }}">
+        <span class="d-inline-flex align-items-center justify-content-center bg-white text-primary rounded p-1 me-2 shadow-sm" style="width: 32px; height: 32px;">
+          <i class="bi bi-truck-front-fill fs-5 text-primary"></i>
+        </span>
+        <span class="fw-bold tracking-tight">LogiFleet</span>
+        <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle ms-2 px-2 py-1 fs-8 text-uppercase">MVP</span>
+      </a>
+
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Alternar navegação">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3 gap-1">
+          <li class="nav-item">
+            <a class="nav-link text-white {{ 'active' if active_page == 'calendar' else 'opacity-75' }}" href="{{ url_for('main.calendar_view') }}">
+              <i class="bi bi-calendar3 me-1"></i> Painel de Agendamento
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white {{ 'active' if active_page == 'drivers' else 'opacity-75' }}" href="{{ url_for('main.drivers_view') }}">
+              <i class="bi bi-people-fill me-1"></i> Motoristas
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white {{ 'active' if active_page == 'vehicles' else 'opacity-75' }}" href="{{ url_for('main.vehicles_view') }}">
+              <i class="bi bi-truck me-1"></i> Veículos da Frota
+            </a>
+          </li>
+        </ul>
+
+        <div class="d-flex align-items-center gap-2">
+          <button id="btnSeedDemo" type="button" class="btn btn-sm btn-outline-light d-flex align-items-center gap-1" title="Carregar dados de demonstração para testar agenda e conflitos">
+            <i class="bi bi-database-fill-gear"></i>
+            <span>Carregar Dados Demo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Container de Conteúdo Principal -->
+  <main class="container-fluid px-lg-4 py-4 flex-grow-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Rodapé do Sistema -->
+  <footer>
+    <div class="container-fluid px-lg-4 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+      <div>
+        <i class="bi bi-shield-check text-success me-1"></i>
+        <strong>LogiFleet</strong> &mdash; Sistema de Gestão de Logística e Agendamento de Frotas
+      </div>
+      <div class="text-secondary small">
+        Python 3 &bull; Flask &bull; SQLAlchemy &bull; SQLite &bull; FullCalendar 6 &bull; Bootstrap 5
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Genérico de Confirmação para Ações Destrutivas -->
+  <div class="modal fade" id="genericConfirmModal" tabindex="-1" aria-labelledby="confirmModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="confirmModalTitle">
+            <i class="bi bi-exclamation-triangle-fill"></i> Confirmação Necessária
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body py-4" id="confirmModalBody">
+          Tem certeza de que deseja realizar esta operação? Esta ação não pode ser desfeita.
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" id="confirmModalActionBtn">
+            <i class="bi bi-trash3 me-1"></i> Confirmar Exclusão
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container Flutuante de Toasts -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
+
+  <!-- Bootstrap 5 Bundle JS com Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+  <!-- Script Global da Aplicação -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
