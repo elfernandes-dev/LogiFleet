@@ -225,7 +225,7 @@ logistics-app/
 
 ---
 
-## 🔮 Melhorias Futuras para Produção
+## Melhorias Futuras para Produção
 
 Para escalar o sistema para ambientes empresariais de grande porte:
 1. **Migração do Banco de Dados:** Substituir o SQLite por **PostgreSQL 15+** com pooling de conexões (PgBouncer) e suporte a réplicas de leitura.
